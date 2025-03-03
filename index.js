@@ -81,6 +81,17 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   });
 });
 
+app.get("/api/users/:_id/logs", (req, res) => {
+  const { _id } = req.params;
+  const user = findUserById(_id);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  return res.json(user);
+});
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
