@@ -29,6 +29,10 @@ const findUserByUsername = (username) => {
   return database.find((user) => user.username == username);
 };
 
+const findUserById = (id) => {
+  return database.find((user) => user._id == id);
+};
+
 app.post("/api/users", (req, res) => {
   const { username } = req.body;
   const existingUser = findUserByUsername(username);
@@ -45,6 +49,36 @@ app.post("/api/users", (req, res) => {
 app.get("/api/users", (_, res) => {
   const users = database.map(({ username, _id }) => ({ username, _id }));
   return res.json(users);
+});
+
+app.post("/api/users/:_id/exercises", (req, res) => {
+  const { _id } = req.params;
+  const { description, duration, date } = req.body;
+
+  const user = findUserById(_id);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const formattedDate = date
+    ? new Date(date).toDateString()
+    : new Date().toDateString();
+
+  const newLog = {
+    description,
+    duration: Number(duration),
+    date: formattedDate,
+  };
+  user.log.push(newLog);
+  user.count = user.log.length;
+
+  return res.json({
+    username: user.username,
+    description: newLog.description,
+    duration: newLog.duration,
+    date: newLog.date,
+    _id,
+  });
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
