@@ -83,13 +83,33 @@ app.post("/api/users/:_id/exercises", (req, res) => {
 
 app.get("/api/users/:_id/logs", (req, res) => {
   const { _id } = req.params;
+  let { from, to, limit } = req.query;
   const user = findUserById(_id);
 
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  return res.json(user);
+  from = from ? new Date(from) : null;
+  to = to ? new Date(to) : null;
+  limit = limit ? parseInt(limit) : null;
+
+  // Filter logs based on date range
+  let filteredLogs = user.log.filter((entry) => {
+    const entryDate = new Date(entry.date);
+    return (!from || entryDate >= from) && (!to || entryDate <= to);
+  });
+
+  if (limit) {
+    filteredLogs = filteredLogs.slice(0, limit);
+  }
+
+  return res.json({
+    username: user.username,
+    _id: user._id,
+    count: filteredLogs.length,
+    log: filteredLogs,
+  });
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
